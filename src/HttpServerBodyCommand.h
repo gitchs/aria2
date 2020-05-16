@@ -64,6 +64,8 @@ private:
   void addHttpServerResponseCommand(bool delayed);
   void updateWriteCheck();
 
+  void handleWebUIResouece();
+
 public:
   HttpServerBodyCommand(cuid_t cuid,
                         const std::shared_ptr<HttpServer>& httpServer,

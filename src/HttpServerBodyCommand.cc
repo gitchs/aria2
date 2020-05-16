@@ -32,6 +32,7 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
+#include <assert.h>
 #include "HttpServerBodyCommand.h"
 #include "SocketCore.h"
 #include "DownloadEngine.h"
@@ -64,6 +65,11 @@
 #  include "XmlRpcRequestParserStateMachine.h"
 #  include "XmlRpcDiskWriter.h"
 #endif // ENABLE_XML_RPC
+#ifdef HAVE_ZLIB
+#  include "GZipEncoder.h"
+#endif // HAVE_ZLIB
+
+#include "resources.h"
 
 namespace aria2 {
 
@@ -220,6 +226,10 @@ bool HttpServerBodyCommand::execute()
 
         // Do something for requestpath and body
         switch (httpServer_->getRequestType()) {
+        case WEBUI:
+          handleWebUIResouece();
+          return true;
+          break;
         case RPC_TYPE_XML: {
 #ifdef ENABLE_XML_RPC
           auto dw = static_cast<rpc::XmlRpcDiskWriter*>(httpServer_->getBody());
@@ -340,6 +350,42 @@ bool HttpServerBodyCommand::execute()
                    e);
     return true;
   }
+}
+
+void HttpServerBodyCommand::handleWebUIResouece() {
+  // TODO: hook gzip
+  static std::string urlPrefix = "/webui/";
+  std::string urlPath = httpServer_->getRequestPath();
+  A2_LOG_DEBUG(fmt("urlpath is %s", urlPath.c_str()));
+  assert(util::startsWith(urlPath, urlPrefix));
+  std::string fixedURLPath = urlPath.substr(urlPrefix.length() - 1);
+  A2_LOG_DEBUG(fmt("fixedURLPath is %s", fixedURLPath.c_str()));
+  if (fixedURLPath == "/") {
+    fixedURLPath = "/index.html";
+  }
+  std::string response = "";
+
+  for (auto resouece : WEBUI_RESOURCES) {
+    if (resouece.urlpath != fixedURLPath) {
+      continue;
+    }
+    response = std::string((const char*)resouece.payload, resouece.payloadSize);
+    if (httpServer_->supportsGZip()) {
+      #ifdef HAVE_ZLIB
+      GZipEncoder o;
+      o.init();
+      o << response;
+      response = o.str();
+      #else
+        abort();
+      #endif
+    }
+    httpServer_->feedResponse(std::move(response), resouece.contentType);
+    addHttpServerResponseCommand(false);
+    return ;
+  }
+  httpServer_->feedResponse(404, "", "", "text/html");
+  addHttpServerResponseCommand(false);
 }
 
 } // namespace aria2
