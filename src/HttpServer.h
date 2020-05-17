@@ -125,6 +125,11 @@ public:
   void feedUpgradeResponse(const std::string& protocol,
                            const std::string& headers);
 
+  void feedResourceResponse(std::string text,
+                           const std::string& contentType);
+  void feedResourceResponse(int status, const std::string& headers = "",
+                    std::string text = "", const std::string& contentType = "");
+
   bool authenticate();
 
   void setUsernamePassword(const std::string& username,

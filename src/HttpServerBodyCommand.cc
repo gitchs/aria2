@@ -380,7 +380,7 @@ void HttpServerBodyCommand::handleWebUIResouece() {
         abort();
       #endif
     }
-    httpServer_->feedResponse(std::move(response), resouece.contentType);
+    httpServer_->feedResourceResponse(std::move(response), resouece.contentType);
     addHttpServerResponseCommand(false);
     return ;
   }

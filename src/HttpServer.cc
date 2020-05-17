@@ -298,6 +298,48 @@ void HttpServer::feedResponse(int status, const std::string& headers,
   socketBuffer_.pushStr(std::move(text));
 }
 
+void HttpServer::feedResourceResponse(std::string text, const std::string& contentType)
+{
+  feedResourceResponse(200, "", std::move(text), contentType);
+}
+
+void HttpServer::feedResourceResponse(int status, const std::string& headers,
+                              std::string text, const std::string& contentType)
+{
+
+  std::string httpDate = Time().toHTTPDate();
+  std::string header =
+      fmt("HTTP/1.1 %s\r\n"
+          "Date: %s\r\n"
+          "Content-Length: %lu\r\n"
+          "Expires: %s\r\n"
+          "Cache-Control: public, max-age=31536000\r\n",
+          getStatusString(status), httpDate.c_str(),
+          static_cast<unsigned long>(text.size()), httpDate.c_str());
+  if (!contentType.empty()) {
+    header += "Content-Type: ";
+    header += contentType;
+    header += "\r\n";
+  }
+  if (!allowOrigin_.empty()) {
+    header += "Access-Control-Allow-Origin: ";
+    header += allowOrigin_;
+    header += "\r\n";
+  }
+  if (supportsGZip()) {
+    header += "Content-Encoding: gzip\r\n";
+  }
+  if (!supportsPersistentConnection()) {
+    header += "Connection: close\r\n";
+  }
+  header += headers;
+  header += "\r\n";
+  A2_LOG_DEBUG(fmt("HTTP Server sends response:\n%s", header.c_str()));
+  socketBuffer_.pushStr(std::move(header));
+  socketBuffer_.pushStr(std::move(text));
+}
+
+
 void HttpServer::feedUpgradeResponse(const std::string& protocol,
                                      const std::string& headers)
 {
