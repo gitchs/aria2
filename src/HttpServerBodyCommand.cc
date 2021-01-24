@@ -352,7 +352,7 @@ bool HttpServerBodyCommand::execute()
 
 void HttpServerBodyCommand::handleWebUIResouece() {
   // TODO: hook gzip
-  static std::string urlPrefix = "/webui/";
+  static std::string urlPrefix = "/aria2ui/";
   std::string urlPath = httpServer_->getRequestPath();
   A2_LOG_DEBUG(fmt("urlpath is %s", urlPath.c_str()));
   assert(util::startsWith(urlPath, urlPrefix));

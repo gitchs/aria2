@@ -374,7 +374,7 @@ int HttpServer::setupResponseRecv()
       reqType_ = RPC_TYPE_JSONP;
       lastBody_.reset();
       return 0;
-    } else if (util::startsWith(path, "/webui/")) {
+    } else if (util::startsWith(path, "/aria2ui/")) {
       reqType_ = WEBUI;
       lastBody_.reset();
       return 0;
